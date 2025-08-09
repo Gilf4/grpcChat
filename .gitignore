@@ -8,7 +8,7 @@ vendor/
 /authService/config/
 .env
 
-#DB
+#db
 /data/
 
 # IDE
