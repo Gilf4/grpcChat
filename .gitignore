@@ -8,6 +8,9 @@ vendor/
 /authService/config/
 .env
 
+#DB
+/data/
+
 # IDE
 .vscode/
 .idea/
