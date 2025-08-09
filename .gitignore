@@ -3,7 +3,10 @@
 /*.exe
 *.test
 vendor/
+
+#config
 /config/
+.env
 
 # IDE
 .vscode/
