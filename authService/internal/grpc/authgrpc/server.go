@@ -2,7 +2,10 @@ package authgrpc
 
 import (
 	"context"
+	"errors"
 
+	"github.com/Gilf4/grpcChat/auth/internal/repository/db"
+	"github.com/Gilf4/grpcChat/auth/internal/services/auth"
 	authv1 "github.com/Gilf4/grpcChat/protos/gen/go/auth/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -36,7 +39,9 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 
 	token, err := s.auth.Login(ctx, email, password)
 	if err != nil {
-		//TODO ...
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
+		}
 
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
@@ -62,7 +67,9 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 
 	userId, err := s.auth.Register(ctx, email, password, name)
 	if err != nil {
-		//TODO ...
+		if errors.Is(err, db.ErrUserExists) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
 
 		return nil, status.Error(codes.Internal, "failed to register")
 	}
