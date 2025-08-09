@@ -1,4 +1,4 @@
-package auth
+package authgrpc
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 )
 
 type Auth interface {
-	Login(ctx context.Context, email string, password string) (token string, err error)
-	Register(ctx context.Context, email string, password string, name string) (userId int64, err error)
+	Login(ctx context.Context, email, password string) (string, error)
+	Register(ctx context.Context, email, password, name string) (int64, error)
 }
 
 type serverAPI struct {
@@ -19,8 +19,8 @@ type serverAPI struct {
 	auth Auth
 }
 
-func Register(gRPCServer *grpc.Server) {
-	authv1.RegisterAuthServer(gRPCServer, &serverAPI{})
+func Register(gRPCServer *grpc.Server, auth Auth) {
+	authv1.RegisterAuthServer(gRPCServer, &serverAPI{auth: auth})
 }
 
 func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv1.LoginResponse, error) {

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net"
 
-	"github.com/Gilf4/grpcChat/auth/internal/grpc/auth"
+	"github.com/Gilf4/grpcChat/auth/internal/grpc/authgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -16,9 +16,13 @@ type App struct {
 	port       int
 }
 
-func New(log *slog.Logger, port int) *App {
+func New(
+	log *slog.Logger,
+	port int,
+	authService authgrpc.Auth,
+) *App {
 	gRPCServer := grpc.NewServer()
-	auth.Register(gRPCServer)
+	authgrpc.Register(gRPCServer, authService)
 	reflection.Register(gRPCServer)
 
 	return &App{

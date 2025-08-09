@@ -25,10 +25,10 @@ func main() {
 
 	log.Info(
 		"starting application:",
-		slog.Any("cfg", cfg),
+		slog.Any("", cfg),
 	)
 
-	application := app.New(log, cfg.GRPC.Port, cfg.TokenTTL)
+	application := app.New(log, cfg.GRPC.Port, cfg.TokenTTL, cfg.JWTSecret)
 
 	go func() {
 		application.GRPCServer.MustRun()

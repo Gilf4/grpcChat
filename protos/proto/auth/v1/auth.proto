@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package auth.v1;
+package authgrpc.v1;
 
-option go_package = "github.com/Gilf4/grpcChat/gen/go/auth/v1;auth";
+option go_package = "github.com/Gilf4/grpcChat/protos/gen/go/auth/v1;authv1";
 
 service Auth {
     rpc Register(RegisterRequest) returns (RegisterResponse);

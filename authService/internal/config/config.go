@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"log/slog"
 	"os"
 	"time"
 
@@ -9,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Env      string        `yaml:"env" env-default:"local"`
-	GRPC     GrpcConfig    `yaml:"grpc"`
-	DB       DBConfig      `yaml:"db"`
-	TokenTTL time.Duration `yaml:"token_ttl" env-required:"true"`
+	Env       string        `yaml:"env" env-default:"local"`
+	GRPC      GrpcConfig    `yaml:"grpc"`
+	DB        DBConfig      `yaml:"db"`
+	TokenTTL  time.Duration `yaml:"token_ttl" env-required:"true"`
+	JWTSecret string        `yaml:"jwt_secret" env-required:"true"`
 }
 
 type GrpcConfig struct {
@@ -57,4 +59,13 @@ func fetchConfigPath() string {
 	}
 
 	return res
+}
+
+func (c Config) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("env", c.Env),
+		slog.Any("grpc", c.GRPC),
+		slog.Any("db", c.DB),
+		slog.Duration("token_ttl", c.TokenTTL),
+	)
 }
