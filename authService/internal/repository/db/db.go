@@ -2,22 +2,23 @@ package db
 
 import (
 	"context"
-	"github.com/Gilf4/grpcChat/auth/internal/repository/models"
+
+	"github.com/Gilf4/grpcChat/auth/internal/domain/models"
 )
 
-type Storage struct {
+type UserStorage struct {
 }
 
-func (s Storage) CreateUser(ctx context.Context, email string, passHash []byte, name string) (id int64, err error) {
+func (s *UserStorage) Create(ctx context.Context, email string, passHash []byte, name string) (id int64, err error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s Storage) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+func (s *UserStorage) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func New() *Storage {
-	return &Storage{}
+func New() *UserStorage {
+	return &UserStorage{}
 }

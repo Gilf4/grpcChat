@@ -3,7 +3,7 @@ package jwt
 import (
 	"time"
 
-	"github.com/Gilf4/grpcChat/auth/internal/repository/models"
+	"github.com/Gilf4/grpcChat/auth/internal/domain/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 

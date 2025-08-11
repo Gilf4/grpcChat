@@ -7,15 +7,15 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Gilf4/grpcChat/auth/internal/domain/models"
 	"github.com/Gilf4/grpcChat/auth/internal/lib/jwt"
 	"github.com/Gilf4/grpcChat/auth/internal/repository/db"
-	"github.com/Gilf4/grpcChat/auth/internal/repository/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, email string, passHash []byte, name string) (id int64, err error)
-	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	Create(ctx context.Context, email string, passHash []byte, name string) (int64, error)
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
 }
 
 type Auth struct {
@@ -47,7 +47,7 @@ func (a *Auth) Login(ctx context.Context, email, pass string) (string, error) {
 
 	log.Info("attempting to login user")
 
-	user, err := a.repo.GetUserByEmail(ctx, email)
+	user, err := a.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, db.ErrUserNotFound) {
 			a.log.Warn("user not found", "error", err.Error())
@@ -92,7 +92,7 @@ func (a *Auth) Register(ctx context.Context, email, pass, name string) (int64, e
 		return 0, err
 	}
 
-	id, err := a.repo.CreateUser(ctx, email, passHash, name)
+	id, err := a.repo.Create(ctx, email, passHash, name)
 	if err != nil {
 		log.Error("failed to save user", "error", err.Error())
 
