@@ -1,0 +1,19 @@
+version: "3"
+
+dotenv: [".env"]
+
+vars:
+  MIGRATION_DSN: "postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@{{.POSTGRES_HOST}}:{{.POSTGRES_PORT}}/{{.POSTGRES_DB}}"
+
+tasks:
+  migration-up:
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} postgres "{{.MIGRATION_DSN}}" up -v
+
+  migration-status:
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} postgres "{{.MIGRATION_DSN}}" status -v
+
+  migration-down:
+    cmds:
+      - goose -dir {{.MIGRATION_DIR}} postgres "{{.MIGRATION_DSN}}" down -v
