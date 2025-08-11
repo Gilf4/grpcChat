@@ -4,7 +4,7 @@
 // 	protoc        v5.29.3
 // source: auth/v1/auth.proto
 
-package authgrpc
+package authv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -225,7 +225,7 @@ var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth/v1/auth.proto\x12\aauth.v1\"W\n" +
+	"\x12auth/v1/auth.proto\x12\vauthgrpc.v1\"W\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
@@ -236,10 +236,10 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"%\n" +
 	"\rLoginResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token2\x7f\n" +
-	"\x04Auth\x12?\n" +
-	"\bRegister\x12\x18.auth.v1.RegisterRequest\x1a\x19.auth.v1.RegisterResponse\x126\n" +
-	"\x05Login\x12\x15.auth.v1.LoginRequest\x1a\x16.auth.v1.LoginResponseB7Z5github.com/Gilf4/grpcChat/gen/go/authgrpc/v1;authgrpcb\x06proto3"
+	"\x05token\x18\x01 \x01(\tR\x05token2\x8f\x01\n" +
+	"\x04Auth\x12G\n" +
+	"\bRegister\x12\x1c.authgrpc.v1.RegisterRequest\x1a\x1d.authgrpc.v1.RegisterResponse\x12>\n" +
+	"\x05Login\x12\x19.authgrpc.v1.LoginRequest\x1a\x1a.authgrpc.v1.LoginResponseB8Z6github.com/Gilf4/grpcChat/protos/gen/go/auth/v1;authv1b\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once
@@ -255,16 +255,16 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 
 var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_auth_v1_auth_proto_goTypes = []any{
-	(*RegisterRequest)(nil),  // 0: auth.v1.RegisterRequest
-	(*RegisterResponse)(nil), // 1: auth.v1.RegisterResponse
-	(*LoginRequest)(nil),     // 2: auth.v1.LoginRequest
-	(*LoginResponse)(nil),    // 3: auth.v1.LoginResponse
+	(*RegisterRequest)(nil),  // 0: authgrpc.v1.RegisterRequest
+	(*RegisterResponse)(nil), // 1: authgrpc.v1.RegisterResponse
+	(*LoginRequest)(nil),     // 2: authgrpc.v1.LoginRequest
+	(*LoginResponse)(nil),    // 3: authgrpc.v1.LoginResponse
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	0, // 0: auth.v1.Auth.Register:input_type -> auth.v1.RegisterRequest
-	2, // 1: auth.v1.Auth.Login:input_type -> auth.v1.LoginRequest
-	1, // 2: auth.v1.Auth.Register:output_type -> auth.v1.RegisterResponse
-	3, // 3: auth.v1.Auth.Login:output_type -> auth.v1.LoginResponse
+	0, // 0: authgrpc.v1.Auth.Register:input_type -> authgrpc.v1.RegisterRequest
+	2, // 1: authgrpc.v1.Auth.Login:input_type -> authgrpc.v1.LoginRequest
+	1, // 2: authgrpc.v1.Auth.Register:output_type -> authgrpc.v1.RegisterResponse
+	3, // 3: authgrpc.v1.Auth.Login:output_type -> authgrpc.v1.LoginResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
