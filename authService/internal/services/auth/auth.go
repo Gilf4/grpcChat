@@ -15,7 +15,7 @@ import (
 
 type UserRepository interface {
 	Create(ctx context.Context, email string, passHash []byte, name string) (int64, error)
-	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByEmail(ctx context.Context, email string) (models.User, error)
 }
 
 type Auth struct {
@@ -50,25 +50,25 @@ func (a *Auth) Login(ctx context.Context, email, pass string) (string, error) {
 	user, err := a.repo.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, db.ErrUserNotFound) {
-			a.log.Warn("user not found", "error", err.Error())
+			log.Warn("user not found", "error", err.Error())
 
 			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
 
-		a.log.Error("failed to get user", "error", err.Error())
+		log.Error("failed to get user", "error", err.Error())
 
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := VerifyPassword(user.PasswordHash, pass); err != nil {
-		a.log.Info("invalid credentials", "error", err.Error())
+	if err := VerifyPassword(user.PassHash, pass); err != nil {
+		log.Info("invalid credentials", "error", err.Error())
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
-	token, err := jwt.NewToken(user, a.tokenTTL, a.jwtSecret)
+	token, err := jwt.NewToken(&user, a.tokenTTL, a.jwtSecret)
 	if err != nil {
-		a.log.Error("failed to generate token", "error", err.Error())
+		log.Error("failed to generate token", "error", err.Error())
 
 		return "", fmt.Errorf("%s: %w", op, err)
 	}

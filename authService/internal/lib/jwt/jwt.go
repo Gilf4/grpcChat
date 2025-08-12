@@ -15,5 +15,5 @@ func NewToken(user *models.User, duration time.Duration, secret string) (string,
 	claims["email"] = user.Email
 	claims["exp"] = time.Now().Add(duration).Unix()
 
-	return token.SignedString(secret)
+	return token.SignedString([]byte(secret))
 }

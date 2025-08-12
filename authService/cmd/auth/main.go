@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -28,7 +29,9 @@ func main() {
 		slog.Any("", cfg),
 	)
 
-	application := app.New(log, cfg.GRPC.Port, cfg.TokenTTL, cfg.JWTSecret)
+	ctx := context.Background()
+
+	application := app.New(ctx, log, cfg)
 
 	go func() {
 		application.GRPCServer.MustRun()

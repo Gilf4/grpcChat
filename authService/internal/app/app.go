@@ -1,10 +1,11 @@
 package app
 
 import (
+	"context"
 	"log/slog"
-	"time"
 
 	grpcapp "github.com/Gilf4/grpcChat/auth/internal/app/grpcApp"
+	"github.com/Gilf4/grpcChat/auth/internal/config"
 	"github.com/Gilf4/grpcChat/auth/internal/repository/db"
 	"github.com/Gilf4/grpcChat/auth/internal/services/auth"
 )
@@ -14,15 +15,18 @@ type App struct {
 }
 
 func New(
+	ctx context.Context,
 	log *slog.Logger,
-	grpcPort int,
-	tokenTTL time.Duration,
-	JWTSecret string,
+	cfg *config.Config,
 ) *App {
-	userRepository := db.New()
-	authService := auth.New(log, userRepository, tokenTTL, JWTSecret)
+	userRepository, err := db.NewUserRepository(ctx, &cfg.DB)
+	if err != nil {
+		panic(err)
+	}
 
-	grpcApp := grpcapp.New(log, grpcPort, authService)
+	authService := auth.New(log, userRepository, cfg.TokenTTL, cfg.JWTSecret)
+
+	grpcApp := grpcapp.New(log, cfg.GRPC.Port, authService)
 
 	return &App{
 		GRPCServer: grpcApp,
