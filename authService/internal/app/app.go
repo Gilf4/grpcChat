@@ -24,7 +24,19 @@ func New(
 		panic(err)
 	}
 
-	authService := auth.New(log, userRepository, cfg.TokenTTL, cfg.JWTSecret)
+	sessionRepository, err := db.NewSessionRepository(ctx, &cfg.DB)
+	if err != nil {
+		panic(err)
+	}
+
+	authService := auth.New(
+		log,
+		userRepository,
+		sessionRepository,
+		cfg.AccessTokenTTL,
+		cfg.RefreshTokenTTL,
+		cfg.JWTSecret,
+	)
 
 	grpcApp := grpcapp.New(log, cfg.GRPC.Port, authService)
 

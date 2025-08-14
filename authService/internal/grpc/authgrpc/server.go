@@ -13,8 +13,9 @@ import (
 )
 
 type Auth interface {
-	Login(ctx context.Context, email, password string) (string, error)
+	Login(ctx context.Context, email, password string) (string, string, error)
 	Register(ctx context.Context, email, password, name string) (int64, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
 }
 
 type serverAPI struct {
@@ -37,7 +38,7 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	token, err := s.auth.Login(ctx, email, password)
+	accessToken, refreshToken, err := s.auth.Login(ctx, email, password)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
@@ -46,7 +47,10 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
 
-	return &authv1.LoginResponse{Token: token}, nil
+	return &authv1.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (*authv1.RegisterResponse, error) {
@@ -75,4 +79,23 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 	}
 
 	return &authv1.RegisterResponse{UserId: userId}, nil
+}
+
+func (s *serverAPI) RefreshAccessToken(ctx context.Context, req *authv1.RefreshTokenRequest) (*authv1.RefreshTokenResponse, error) {
+	refreshToken := req.GetRefreshToken()
+	if refreshToken == "" {
+		return nil, status.Error(codes.InvalidArgument, "refresh token is required")
+	}
+
+	accessToken, err := s.auth.RefreshAccessToken(ctx, refreshToken)
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidRefreshToken) {
+			return nil, status.Error(codes.Unauthenticated, "invalid refresh token")
+		}
+		return nil, status.Error(codes.Internal, "failed to refresh access token")
+	}
+
+	return &authv1.RefreshTokenResponse{
+		AccessToken: accessToken,
+	}, nil
 }

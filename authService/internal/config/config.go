@@ -10,11 +10,12 @@ import (
 )
 
 type Config struct {
-	Env       string        `yaml:"env" env-default:"local"`
-	GRPC      GrpcConfig    `yaml:"grpc"`
-	DB        DBConfig      `yaml:"db"`
-	TokenTTL  time.Duration `yaml:"token_ttl" env-required:"true"`
-	JWTSecret string        `yaml:"jwt_secret" env-required:"true"`
+	Env             string        `yaml:"env" env-default:"local"`
+	GRPC            GrpcConfig    `yaml:"grpc"`
+	DB              DBConfig      `yaml:"db"`
+	AccessTokenTTL  time.Duration `yaml:"access_token_ttl" env-required:"true"`
+	RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl" env-required:"true"`
+	JWTSecret       string        `yaml:"jwt_secret" env-required:"true"`
 }
 
 type GrpcConfig struct {
@@ -66,6 +67,7 @@ func (c Config) LogValue() slog.Value {
 		slog.String("env", c.Env),
 		slog.Any("grpc", c.GRPC),
 		slog.Any("db", c.DB),
-		slog.Duration("token_ttl", c.TokenTTL),
+		slog.Duration("access_token_ttl", c.AccessTokenTTL),
+		slog.Duration("refresh_toke_ttl", c.AccessTokenTTL),
 	)
 }

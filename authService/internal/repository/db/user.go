@@ -38,7 +38,7 @@ func (s *UserStorage) Create(
 	passHash []byte,
 	name string,
 ) (int64, error) {
-	op := "repo.db.Create"
+	op := "repo.User.Create"
 
 	query := `
 		INSERT INTO users (email, pass_hash, name)
@@ -60,7 +60,7 @@ func (s *UserStorage) Create(
 }
 
 func (s *UserStorage) GetByEmail(ctx context.Context, email string) (models.User, error) {
-	op := "repo.db.GetByEmail"
+	op := "repo.User.GetByEmail"
 
 	query := `
 		SELECT id, email, pass_hash, name
@@ -77,6 +77,31 @@ func (s *UserStorage) GetByEmail(ctx context.Context, email string) (models.User
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (s *UserStorage) GetByID(ctx context.Context, id int64) (models.User, error) {
+	op := "repo.User.GetByID"
+
+	query := `
+		SELECT id, email, pass_hash, name
+		FROM users
+		WHERE id = $1
+	`
+	var user models.User
+	err := s.db.QueryRow(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PassHash,
+		&user.Name,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.User{}, ErrUserNotFound
 		}
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
