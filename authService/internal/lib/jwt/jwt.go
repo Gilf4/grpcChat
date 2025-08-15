@@ -7,13 +7,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewToken(user *models.User, duration time.Duration, secret string) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
+func NewToken(user *models.User, duration time.Duration, secret string) (string, time.Time, error) {
+	expiresAt := time.Now().Add(duration)
 
+	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["id"] = user.ID
 	claims["email"] = user.Email
-	claims["exp"] = time.Now().Add(duration).Unix()
+	claims["exp"] = expiresAt.Unix()
 
-	return token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return tokenString, expiresAt, nil
 }

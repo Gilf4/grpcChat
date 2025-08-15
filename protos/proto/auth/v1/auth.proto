@@ -4,9 +4,12 @@ package authgrpc.v1;
 
 option go_package = "github.com/Gilf4/grpcChat/protos/gen/go/auth/v1;authv1";
 
+import "google/protobuf/timestamp.proto";
+
 service Auth {
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc Login(LoginRequest) returns (LoginResponse);
+    rpc RefreshAccessToken(RefreshAccessTokenRequest) returns (RefreshAccessTokenResponse);
 }
 
 message RegisterRequest {
@@ -25,5 +28,18 @@ message LoginRequest {
 }
 
 message LoginResponse {
-    string token = 1;
+    string access_token = 1;
+    string refresh_token = 2;
+
+    google.protobuf.Timestamp access_expires_at = 3;
+    google.protobuf.Timestamp refresh_expires_at = 4;
+}
+
+message RefreshAccessTokenRequest {
+    string refresh_token = 1;
+}
+
+message RefreshAccessTokenResponse {
+    string access_token = 1;
+    google.protobuf.Timestamp access_expires_at = 2;
 }

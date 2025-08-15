@@ -3,6 +3,7 @@ package authgrpc
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Gilf4/grpcChat/auth/internal/repository/db"
 	"github.com/Gilf4/grpcChat/auth/internal/services/auth"
@@ -10,12 +11,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Auth interface {
-	Login(ctx context.Context, email, password string) (string, string, error)
+	Login(ctx context.Context, email, password string) (string, string, time.Time, time.Time, error)
 	Register(ctx context.Context, email, password, name string) (int64, error)
-	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, time.Time, error)
 }
 
 type serverAPI struct {
@@ -38,7 +40,7 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 		return nil, status.Error(codes.InvalidArgument, "password is required")
 	}
 
-	accessToken, refreshToken, err := s.auth.Login(ctx, email, password)
+	accessToken, refreshToken, accessExpiresAt, refreshExpiresAt, err := s.auth.Login(ctx, email, password)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
@@ -50,6 +52,9 @@ func (s *serverAPI) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 	return &authv1.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+
+		AccessExpiresAt:  timestamppb.New(accessExpiresAt),
+		RefreshExpiresAt: timestamppb.New(refreshExpiresAt),
 	}, nil
 }
 
@@ -81,13 +86,13 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 	return &authv1.RegisterResponse{UserId: userId}, nil
 }
 
-func (s *serverAPI) RefreshAccessToken(ctx context.Context, req *authv1.RefreshTokenRequest) (*authv1.RefreshTokenResponse, error) {
+func (s *serverAPI) RefreshAccessToken(ctx context.Context, req *authv1.RefreshAccessTokenRequest) (*authv1.RefreshAccessTokenResponse, error) {
 	refreshToken := req.GetRefreshToken()
 	if refreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "refresh token is required")
 	}
 
-	accessToken, err := s.auth.RefreshAccessToken(ctx, refreshToken)
+	accessToken, accessExpiresAt, err := s.auth.RefreshAccessToken(ctx, refreshToken)
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidRefreshToken) {
 			return nil, status.Error(codes.Unauthenticated, "invalid refresh token")
@@ -95,7 +100,10 @@ func (s *serverAPI) RefreshAccessToken(ctx context.Context, req *authv1.RefreshT
 		return nil, status.Error(codes.Internal, "failed to refresh access token")
 	}
 
-	return &authv1.RefreshTokenResponse{
+	return &authv1.RefreshAccessTokenResponse{
 		AccessToken: accessToken,
+
+		AccessExpiresAt: timestamppb.New(accessExpiresAt),
 	}, nil
+
 }

@@ -26,7 +26,7 @@ type UserRepository interface {
 }
 
 type SessionRepository interface {
-	Create(ctx context.Context, userID int64, refreshToken string, ttl time.Duration) error
+	Create(ctx context.Context, userID int64, refreshToken string, ttl time.Duration) (models.Session, error)
 	GetByToken(ctx context.Context, token string) (*models.Session, error)
 	Delete(ctx context.Context, token string) error
 }
@@ -62,7 +62,7 @@ func New(
 	}
 }
 
-func (a *Auth) Login(ctx context.Context, email, pass string) (string, string, error) {
+func (a *Auth) Login(ctx context.Context, email, pass string) (string, string, time.Time, time.Time, error) {
 	const op = "Auth.Login"
 
 	log := a.log.With(
@@ -76,42 +76,42 @@ func (a *Auth) Login(ctx context.Context, email, pass string) (string, string, e
 		if errors.Is(err, db.ErrUserNotFound) {
 			log.Warn("user not found", "error", err.Error())
 
-			return "", "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
 
 		log.Error("failed to get user", "error", err.Error())
 
-		return "", "", fmt.Errorf("%s: %w", op, err)
+		return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err := VerifyPassword(user.PassHash, pass); err != nil {
 		log.Info("invalid credentials", "error", err.Error())
 
-		return "", "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
-	accessToken, err := jwt.NewToken(&user, a.accessTokenTTL, a.jwtSecret)
+	accessToken, accessExpiresAt, err := jwt.NewToken(&user, a.accessTokenTTL, a.jwtSecret)
 	if err != nil {
 		log.Error("failed to generate access token", "error", err.Error())
 
-		return "", "", fmt.Errorf("%s: %w", op, err)
+		return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	refreshToken, err := refresh.GenerateToken()
 	if err != nil {
 		log.Error("failed to generate refresh token", "error", err.Error())
 
-		return "", "", fmt.Errorf("%s: %w", op, err)
+		return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = a.sessionRepo.Create(ctx, user.ID, refreshToken, a.refreshTokenTTL)
+	session, err := a.sessionRepo.Create(ctx, user.ID, refreshToken, a.refreshTokenTTL)
 	if err != nil {
 		log.Error("failed to create refresh token in db", "error", err.Error())
 
-		return "", "", fmt.Errorf("%s: %w", op, err)
+		return "", "", time.Time{}, time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, accessExpiresAt, session.ExpiresAt, nil
 }
 
 func (a *Auth) Register(ctx context.Context, email, pass, name string) (int64, error) {
@@ -140,7 +140,7 @@ func (a *Auth) Register(ctx context.Context, email, pass, name string) (int64, e
 	return id, nil
 }
 
-func (a *Auth) RefreshAccessToken(ctx context.Context, refreshToken string) (string, error) {
+func (a *Auth) RefreshAccessToken(ctx context.Context, refreshToken string) (string, time.Time, error) {
 	const op = "Auth.RefreshAccessToken"
 
 	log := a.log.With(
@@ -151,32 +151,32 @@ func (a *Auth) RefreshAccessToken(ctx context.Context, refreshToken string) (str
 	if err != nil {
 		if errors.Is(err, db.ErrTokenNotFound) {
 			log.Warn("refresh token not found")
-			return "", ErrInvalidRefreshToken
+			return "", time.Time{}, ErrInvalidRefreshToken
 		}
 		log.Error("failed to get session", "error", err)
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if time.Now().After(session.ExpiresAt) {
 		log.Warn("refresh token expired")
-		return "", ErrRefreshTokenExpired
+		return "", time.Time{}, ErrRefreshTokenExpired
 	}
 
 	user, err := a.userRepo.GetByID(ctx, session.UserID)
 	if err != nil {
 		log.Error("failed to get user", "error", err)
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	accessToken, err := jwt.NewToken(&user, a.accessTokenTTL, a.jwtSecret)
+	accessToken, expiresAt, err := jwt.NewToken(&user, a.accessTokenTTL, a.jwtSecret)
 	if err != nil {
 		log.Error("failed to create access token", "error", err)
-		return "", fmt.Errorf("%s: %w", op, err)
+		return "", time.Time{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("access token refreshed successfully")
 
-	return accessToken, nil
+	return accessToken, expiresAt, nil
 }
 
 func HashPassword(password string) ([]byte, error) {

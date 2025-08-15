@@ -32,19 +32,21 @@ func NewSessionRepository(ctx context.Context, dbCfg *config.DBConfig) (*Session
 	return &SessionStorage{db: pool}, nil
 }
 
-func (s *SessionStorage) Create(ctx context.Context, userID int64, refreshToken string, ttl time.Duration) error {
+func (s *SessionStorage) Create(ctx context.Context, userID int64, refreshToken string, ttl time.Duration) (models.Session, error) {
 	op := "repo.Session.Create"
 
 	query := `
 		INSERT INTO sessions (user_id, refresh_token, expires_at)
 		VALUES ($1, $2, $3)
+		RETURNING id, expires_at
 	`
 
-	_, err := s.db.Exec(ctx, query, userID, refreshToken, time.Now().Add(ttl))
+	var session models.Session
+	err := s.db.QueryRow(ctx, query, userID, refreshToken, time.Now().Add(ttl)).Scan(&session.ID, &session.ExpiresAt)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return models.Session{}, fmt.Errorf("%s: %w", op, err)
 	}
-	return nil
+	return session, nil
 }
 
 func (s *SessionStorage) GetByToken(ctx context.Context, token string) (*models.Session, error) {
