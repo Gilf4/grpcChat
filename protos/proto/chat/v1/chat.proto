@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package chatgrpc.v1;
+
+option go_package = "github.com/Gilf4/grpcChat/protos/gen/go/chat/v1;chatv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service ChatService {
+    rpc CreateChat(CreateChatRequest) returns (CreateChatResponse);
+    rpc GetChatList(google.protobuf.Empty) returns (GetChatListResponse);
+    rpc ConnectChat(ConnectChatRequest) returns (stream Message);
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}
+
+message Message {
+    string id = 1;
+    string chat_id = 2;
+    string sender_id = 3;
+    string text = 4;
+}
+
+message CreateChatRequest {
+    string name = 1;
+}
+
+message CreateChatResponse {
+    Chat chat = 1;
+}
+
+message GetChatListResponse {
+    repeated Chat chats = 1;
+}
+
+message Chat {
+    string id = 1;
+    string name = 2;
+}
+
+message ConnectChatRequest {
+    string id = 1;
+}
+
+message SendMessageRequest {
+    string chat_id = 1;
+    string sender_id = 2;
+    string text = 3;
+}
+
+message SendMessageResponse {
+    Message message = 1;
+}

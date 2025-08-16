@@ -18,7 +18,7 @@ tasks:
     cmds:
       - goose -dir {{.MIGRATION_DIR}} postgres "{{.MIGRATION_DSN}}" down -v
 
-  generate:
+  generate-auth:
     cmds:
       - |
         protoc \
@@ -26,3 +26,12 @@ tasks:
           --go_out=protos/gen/go --go_opt=paths=source_relative \
           --go-grpc_out=protos/gen/go --go-grpc_opt=paths=source_relative \
           protos/proto/auth/v1/auth.proto
+
+  generate-chat:
+    cmds:
+      - |
+        protoc \
+          --proto_path=protos/proto \
+          --go_out=protos/gen/go --go_opt=paths=source_relative \
+          --go-grpc_out=protos/gen/go --go-grpc_opt=paths=source_relative \
+          protos/proto/chat/v1/chat.proto
