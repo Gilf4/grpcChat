@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/Gilf4/grpcChat/chat/internal/app"
 	"github.com/Gilf4/grpcChat/chat/internal/config"
 )
 
@@ -18,10 +22,21 @@ func main() {
 
 	log := setupLogger(cfg.Env)
 
-	log.Info(
-		"starting application:",
-		slog.Any("", cfg),
-	)
+	ctx := context.Background()
+
+	application := app.New(ctx, log, cfg)
+
+	go func() {
+		application.GRPCServer.MustRun()
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	signal := <-stop
+
+	application.GRPCServer.Stop()
+	log.Info("Gracefully stopped", "signal", signal)
 }
 
 func setupLogger(env string) *slog.Logger {
